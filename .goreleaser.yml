@@ -10,6 +10,8 @@ builds:
 # Archive customization
 archive:
   format: tar.gz
+sign:
+   artifacts: checksum
 brew:
   github:
     owner: jaxxstorm
@@ -20,3 +22,12 @@ brew:
   folder: Formula
   homepage: "https://leebriggs.co.uk/"
   description: "A simple tool to change your AWS credentials quickly from the commandline"
+fpm:
+  vendor: Lee Briggs
+  homepage: https://leebriggs.co.uk
+  maintainer: Lee Briggs <lee@leebriggs.co.uk>
+  description: "A simple tool to change your AWS credentials quickly from the commandline"
+  license: MIT
+  formats:
+    - deb
+    - rpm
