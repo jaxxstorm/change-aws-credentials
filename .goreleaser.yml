@@ -10,5 +10,3 @@ builds:
 # Archive customization
 archive:
   format: tar.gz
-dockers:
-  - image: jaxxstorm/change-aws-credentials
