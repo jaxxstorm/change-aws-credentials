@@ -21,10 +21,20 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
+
+	log "github.com/Sirupsen/logrus"
 )
+
+var userName string
+var newPass string
 
 // passwordCmd represents the password command
 var passwordCmd = &cobra.Command{
@@ -33,22 +43,61 @@ var passwordCmd = &cobra.Command{
 	Long: `Change your AWS password using update-login-profile
 without using your old password.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("password called")
+		sess, err := session.NewSessionWithOptions(session.Options{
+			Profile: awsProfile,
+		})
+
+		if newPass == "" {
+			newPass = getPassword()
+		}
+
+		if userName == "" {
+			log.Fatal("Please specify a username: See --help")
+		}
+
+		if awsProfile == "" {
+			log.Warning("Profile not specified, using default from AWS_PROFILE env var: ", os.Getenv("AWS_PROFILE"))
+		}
+
+		svc := iam.New(sess)
+		input := &iam.UpdateLoginProfileInput{
+			Password: aws.String(newPass),
+			UserName: aws.String(userName),
+		}
+		_, err = svc.UpdateLoginProfile(input)
+		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case iam.ErrCodeEntityTemporarilyUnmodifiableException:
+					log.Fatal(iam.ErrCodeEntityTemporarilyUnmodifiableException, aerr.Error())
+				case iam.ErrCodeNoSuchEntityException:
+					log.Fatal(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				case iam.ErrCodePasswordPolicyViolationException:
+					log.Fatal(iam.ErrCodePasswordPolicyViolationException, aerr.Error())
+				case iam.ErrCodeLimitExceededException:
+					log.Fatal(iam.ErrCodeLimitExceededException, aerr.Error())
+				case iam.ErrCodeServiceFailureException:
+					log.Fatal(iam.ErrCodeServiceFailureException, aerr.Error())
+				default:
+					log.Fatal(aerr.Error())
+				}
+			} else {
+				// Print the error, cast err to awserr.Error to get the Code and
+				// Message from an error.
+				log.Fatal(err.Error())
+			}
+			return
+		}
+
+		log.Info("Password changed successfully")
+
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(passwordCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// passwordCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// passwordCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	passwordCmd.PersistentFlags().StringVarP(&userName, "username", "u", "", "Username to change pass for")
+	passwordCmd.PersistentFlags().StringVarP(&newPass, "password", "p", "", "New AWS Password for user & profile")
 
 }

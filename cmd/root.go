@@ -21,16 +21,11 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/bgentry/speakeasy"
 
 	log "github.com/Sirupsen/logrus"
@@ -38,8 +33,6 @@ import (
 
 var cfgFile string
 var awsProfile string
-var userName string
-var newPass string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -47,58 +40,7 @@ var RootCmd = &cobra.Command{
 	Short: "Change your AWS credentials quickly from the cmdline",
 	Long: `Allows users to quickly reset their AWS credentials without
 having to burden an administrator`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-		sess, err := session.NewSessionWithOptions(session.Options{
-			Profile: awsProfile,
-		})
-
-		if newPass == "" {
-			newPass = getPassword()
-		}
-
-		if userName == "" {
-			log.Fatal("Please specify a username: See --help")
-		}
-
-		if awsProfile == "" {
-			log.Warning("Profile not specified, using default from AWS_PROFILE env var: ", os.Getenv("AWS_PROFILE"))
-		}
-
-		svc := iam.New(sess)
-		input := &iam.UpdateLoginProfileInput{
-			Password: aws.String(newPass),
-			UserName: aws.String(userName),
-		}
-
-		_, err = svc.UpdateLoginProfile(input)
-		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case iam.ErrCodeEntityTemporarilyUnmodifiableException:
-					log.Fatal(iam.ErrCodeEntityTemporarilyUnmodifiableException, aerr.Error())
-				case iam.ErrCodeNoSuchEntityException:
-					log.Fatal(iam.ErrCodeNoSuchEntityException, aerr.Error())
-				case iam.ErrCodePasswordPolicyViolationException:
-					log.Fatal(iam.ErrCodePasswordPolicyViolationException, aerr.Error())
-				case iam.ErrCodeLimitExceededException:
-					log.Fatal(iam.ErrCodeLimitExceededException, aerr.Error())
-				case iam.ErrCodeServiceFailureException:
-					log.Fatal(iam.ErrCodeServiceFailureException, aerr.Error())
-				default:
-					log.Fatal(aerr.Error())
-				}
-			} else {
-				// Print the error, cast err to awserr.Error to get the Code and
-				// Message from an error.
-				log.Fatal(err.Error())
-			}
-			return
-		}
-
-		log.Info("Password changed successfully")
-
-	},
+	Run: func(cmd *cobra.Command, args []string) {},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -114,8 +56,6 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.change-aws-password.yaml)")
 	RootCmd.PersistentFlags().StringVarP(&awsProfile, "awsprofile", "P", "", "AWS Profile to Change Credentials for")
-	RootCmd.PersistentFlags().StringVarP(&userName, "username", "u", "", "Username to change pass for")
-	RootCmd.PersistentFlags().StringVarP(&newPass, "password", "p", "", "New AWS Password for user & profile")
 }
 
 // initConfig reads in config file and ENV variables if set.
