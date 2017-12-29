@@ -10,3 +10,13 @@ builds:
 # Archive customization
 archive:
   format: tar.gz
+brew:
+  github:
+    owner: jaxxstorm
+    name: homebrew-tap
+  commit_author:
+    name: Lee Briggs
+    email: lee@leebriggs.co.uk
+  folder: Formula
+  homepage: "https://leebriggs.co.uk/"
+  description: "A simple tool to change your AWS credentials quickly from the commandline"
