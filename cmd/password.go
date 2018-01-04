@@ -25,9 +25,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+
+	amazon "github.com/jaxxstorm/change-aws-credentials/pkg/aws"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -43,24 +43,7 @@ var passwordCmd = &cobra.Command{
 without using your old password.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// grab credentials from env vars first
-		// then use the config file
-		creds := credentials.NewChainCredentials(
-			[]credentials.Provider{
-				&credentials.EnvProvider{},
-				&credentials.SharedCredentialsProvider{},
-			},
-		)
-
-		_, err := creds.Get()
-
-		if err != nil {
-			log.Fatal("Error getting creds")
-		}
-
-		sess, err := session.NewSession(&aws.Config{
-			Credentials: creds,
-		})
+		sess, err := amazon.New(awsProfile)
 
 		if newPass == "" {
 			newPass = getPassword()

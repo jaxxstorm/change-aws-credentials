@@ -25,12 +25,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/segmentio/go-prompt"
+
+	amazon "github.com/jaxxstorm/change-aws-credentials/pkg/aws"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -45,32 +45,7 @@ var keysCmd = &cobra.Command{
 your credentials file`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// grab credentials from env vars first
-		// then use the config file
-		creds := credentials.NewChainCredentials(
-			[]credentials.Provider{
-				&credentials.EnvProvider{},
-				&credentials.SharedCredentialsProvider{
-					Profile: awsProfile,
-				},
-			},
-		)
-
-		// get creds
-		_, err := creds.Get()
-
-		if err != nil {
-			log.Fatal("Error getting creds")
-		}
-
-		// create a session with creds we've used
-		sess, err := session.NewSession(&aws.Config{
-			Credentials: creds,
-		})
-
-		if err != nil {
-			log.Fatal("Error creating AWS Session: ", err)
-		}
+		sess, err := amazon.New(awsProfile)
 
 		if awsProfile == "" {
 			log.Warning("Profile not specified, using default profile from credentials provider")
