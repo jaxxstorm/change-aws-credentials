@@ -8,6 +8,24 @@ Currently supports changing your password, will eventually support changing your
 
 Your AWS users must have the ability to change their own IAM credentials. You can see how to configure this [here](http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_users-self-manage-mfa-and-creds.html)
 
+# Installation
+
+### OS X
+
+Install via homebrew: `brew install jaxxstorm/tap/change-aws-credentials`
+
+### Linux
+
+Install the Go binary and place it in your `$PATH`. You can download the latest version using this handy one-liner:
+
+```
+curl -s https://api.github.com/repos/jaxxstorm/change-aws-credentials/releases/latest | jq -r '.assets[]| select(.browser_download_url | contains("linux")) | .browser_download_url' | wget -i -
+```
+
+### Windows
+
+Download the latest release from the [releases](https://github.com/jaxxstorm/change-aws-credentials/releases/latest) page and install as appropriate.
+
 # Usage
 
 ```bash
