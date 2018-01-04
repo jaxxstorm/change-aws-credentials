@@ -27,12 +27,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/segmentio/go-prompt"
 
 	log "github.com/Sirupsen/logrus"
 )
+
+var yes bool
 
 // keysCmd represents the keys command
 var keysCmd = &cobra.Command{
@@ -74,10 +79,52 @@ your credentials file`,
 		}
 
 		if len(currentAccessKey.AccessKeyMetadata) > 1 {
-			log.Fatal("You have more than 1 AWS Keypair - this is not standard and needs to be resolved immediately. Please your AWS Administrator")
+			log.Fatal("You have more than 1 AWS Keypair - this is not standard and needs to be resolved immediately. Please contact your AWS Administrator")
 		}
 
-		log.Info("AWS Access Key: ", *currentAccessKey.AccessKeyMetadata[0].AccessKeyId)
+		log.Info("Rotating AWS Access Key: ", *currentAccessKey.AccessKeyMetadata[0].AccessKeyId)
+
+		lastUsed, err := iamClient.GetAccessKeyLastUsed(&iam.GetAccessKeyLastUsedInput{AccessKeyId: currentAccessKey.AccessKeyMetadata[0].AccessKeyId})
+
+		if err != nil {
+			log.Fatal("Error getting last used for Access Key: ", err)
+		}
+
+		var confirm bool
+
+		if yes == false {
+			confirm = prompt.Confirm("Would you like to rotate the above key? It was last used:  %s ", lastUsed.AccessKeyLastUsed.LastUsedDate)
+		} else {
+			confirm = true
+		}
+
+		if !confirm {
+			log.Fatal("Not confirmed: exiting")
+		} else {
+
+			// create the access key
+			createAccessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{})
+
+			if err != nil {
+				log.Fatal("Error creating new Access Key: ", err)
+			}
+
+			log.Info("New Access Key: ", *createAccessKey.AccessKey.AccessKeyId)
+			log.Info("New Secret Key: ", *createAccessKey.AccessKey.SecretAccessKey)
+			log.Warn("Please save these to your credentials file!")
+
+			_, err = iamClient.UpdateAccessKey(&iam.UpdateAccessKeyInput{
+				AccessKeyId: currentAccessKey.AccessKeyMetadata[0].AccessKeyId,
+				Status:      aws.String("Inactive"),
+			})
+
+			if err != nil {
+				log.Fatal("Error Deactivating Old Access Key: ", err)
+			}
+
+			log.Info("Old Access Key Deactivated: ", *currentAccessKey.AccessKeyMetadata[0].AccessKeyId)
+
+		}
 
 	},
 }
@@ -85,14 +132,6 @@ your credentials file`,
 func init() {
 	RootCmd.AddCommand(keysCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// keysCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// keysCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	keysCmd.PersistentFlags().BoolVarP(&yes, "yes", "y", false, "Don't prompt for confirmation")
 
 }
