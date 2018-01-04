@@ -57,7 +57,7 @@ You can specify the AWS profile you want to change the password for using the `-
 
 If you want to contribute, we use glide for dependency management, so it should be as simple as:
 
- - cloning this repo into `$GOPATH/src/github.com/jaxxstorm/change-aws-credentials 
+ - cloning this repo into `$GOPATH/src/github.com/jaxxstorm/change-aws-credentials`
  - run glide install from the directory 
  - run go build -o change-aws-credentials main.go
 

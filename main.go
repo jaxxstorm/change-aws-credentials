@@ -22,8 +22,8 @@ package main
 
 import "github.com/jaxxstorm/change-aws-credentials/cmd"
 
-var Version = "v0.1.0"
+var version = "snapshot"
 
 func main() {
-	cmd.Execute(Version)
+	cmd.Execute(version)
 }

@@ -48,6 +48,8 @@ having to burden an administrator`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(version string) {
+	// export across packages with caps
+	Version = version
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}

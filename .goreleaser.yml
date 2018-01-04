@@ -20,5 +20,7 @@ brew:
     name: Lee Briggs
     email: lee@leebriggs.co.uk
   folder: Formula
+  test: |
+    system "#{bin}/change-aws-credentials version"
   homepage: "https://leebriggs.co.uk/"
   description: "A simple tool to change your AWS credentials quickly from the commandline"
