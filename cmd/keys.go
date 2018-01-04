@@ -21,17 +21,15 @@
 package cmd
 
 import (
-	//"fmt"
-
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/aws"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
+
 	"github.com/segmentio/go-prompt"
 
 	log "github.com/Sirupsen/logrus"
@@ -47,8 +45,27 @@ var keysCmd = &cobra.Command{
 your credentials file`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		sess, err := session.NewSessionWithOptions(session.Options{
-			Profile: awsProfile,
+		// grab credentials from env vars first
+		// then use the config file
+		creds := credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.EnvProvider{},
+				&credentials.SharedCredentialsProvider{
+					Profile: awsProfile,
+				},
+			},
+		)
+
+		// get creds
+		_, err := creds.Get()
+
+		if err != nil {
+			log.Fatal("Error getting creds")
+		}
+
+		// create a session with creds we've used
+		sess, err := session.NewSession(&aws.Config{
+			Credentials: creds,
 		})
 
 		if err != nil {
@@ -56,7 +73,7 @@ your credentials file`,
 		}
 
 		if awsProfile == "" {
-			log.Warning("Profile not specified, using default from AWS_PROFILE env var: ", os.Getenv("AWS_PROFILE"))
+			log.Warning("Profile not specified, using default profile from credentials provider")
 		}
 
 		// create an STS client and figure out who we are
@@ -67,6 +84,7 @@ your credentials file`,
 			log.Fatal("Error getting caller identity: ", err)
 		}
 
+		// print who we are
 		log.Info("Your user arn is: ", *currentIdentity.Arn)
 
 		// create an IAM client for the current user
@@ -79,15 +97,19 @@ your credentials file`,
 			log.Fatal("Error listing keys: ", err)
 		}
 
+		// print number of keys
 		log.Info("Number of Access Keys Found: ", len(currentAccessKey.AccessKeyMetadata))
 
+		// a slice to put keys in
 		var keys []string
 
 		// loop through all keys
 		for _, key := range currentAccessKey.AccessKeyMetadata {
+			// add active keys to a slice for later
 			if *key.Status != "Inactive" {
 				keys = append(keys, *key.AccessKeyId)
 			}
+			// get last used date
 			lastUsed, err := iamClient.GetAccessKeyLastUsed(&iam.GetAccessKeyLastUsedInput{AccessKeyId: key.AccessKeyId})
 			if err != nil {
 				log.Error("Error getting last used time for key: ", key.AccessKeyId)
@@ -95,6 +117,7 @@ your credentials file`,
 			log.WithFields(log.Fields{"AccessKey": *key.AccessKeyId, "LastUsed": lastUsed.AccessKeyLastUsed.LastUsedDate, "Status": *key.Status}).Info("Found Access Key")
 		}
 
+		// determine the key to cycle
 		var changeKey string
 		if len(keys) > 1 {
 			log.Info("Found multiple active keys, prompting..")
@@ -110,6 +133,7 @@ your credentials file`,
 			log.Fatal("Error getting last used for Access Key: ", err)
 		}
 
+		// confirm operations
 		var confirm bool
 
 		if yes == false {
@@ -122,17 +146,20 @@ your credentials file`,
 			log.Fatal("Not confirmed: exiting")
 		} else {
 
-			// create the access key
+			// create the new keys
 			createAccessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{})
 
 			if err != nil {
 				log.Fatal("Error creating new Access Key: ", err)
 			}
 
+			// print new keys
+			// FIXME: write the credentials files
 			log.Info("New Access Key: ", *createAccessKey.AccessKey.AccessKeyId)
 			log.Info("New Secret Key: ", *createAccessKey.AccessKey.SecretAccessKey)
 			log.Warn("Please save these to your credentials file!")
 
+			// deactivate the old keys
 			_, err = iamClient.UpdateAccessKey(&iam.UpdateAccessKeyInput{
 				AccessKeyId: aws.String(changeKey),
 				Status:      aws.String("Inactive"),

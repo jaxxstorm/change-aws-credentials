@@ -21,12 +21,11 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 
@@ -43,8 +42,24 @@ var passwordCmd = &cobra.Command{
 	Long: `Change your AWS password using update-login-profile
 without using your old password.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		sess, err := session.NewSessionWithOptions(session.Options{
-			Profile: awsProfile,
+
+		// grab credentials from env vars first
+		// then use the config file
+		creds := credentials.NewChainCredentials(
+			[]credentials.Provider{
+				&credentials.EnvProvider{},
+				&credentials.SharedCredentialsProvider{},
+			},
+		)
+
+		_, err := creds.Get()
+
+		if err != nil {
+			log.Fatal("Error getting creds")
+		}
+
+		sess, err := session.NewSession(&aws.Config{
+			Credentials: creds,
 		})
 
 		if newPass == "" {
@@ -56,7 +71,7 @@ without using your old password.`,
 		}
 
 		if awsProfile == "" {
-			log.Warning("Profile not specified, using default from AWS_PROFILE env var: ", os.Getenv("AWS_PROFILE"))
+			log.Warning("Profile not specified, using default from credentials provider")
 		}
 
 		svc := iam.New(sess)
