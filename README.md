@@ -38,6 +38,7 @@ Usage:
 
 Available Commands:
   help        Help about any command
+  keys        Rotate your AWS keys
   password    Change your AWS Password
 
 Flags:
