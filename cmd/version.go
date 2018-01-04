@@ -1,4 +1,4 @@
-// Copyright © 2017 Lee Briggs <lee@leebriggs.co.uk>
+// Copyright © 2018 Lee Briggs <lee@leebriggs.co.uk>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,12 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package cmd
 
-import "github.com/jaxxstorm/change-aws-credentials/cmd"
+import (
+	"fmt"
 
-var Version = "v0.1.0"
+	"github.com/spf13/cobra"
+)
 
-func main() {
-	cmd.Execute(Version)
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Show the current version of change-aws-credentials",
+	Long:  `Display the current version of change-aws-credentials`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(RootCmd.Use + " " + Version)
+	},
+}
+
+func init() {
+	RootCmd.AddCommand(versionCmd)
 }

@@ -34,6 +34,8 @@ import (
 var cfgFile string
 var awsProfile string
 
+var Version string
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "change-aws-credentials",
@@ -45,7 +47,7 @@ having to burden an administrator`,
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(version string) {
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
