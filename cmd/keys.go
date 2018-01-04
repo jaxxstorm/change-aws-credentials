@@ -72,19 +72,39 @@ your credentials file`,
 		// create an IAM client for the current user
 		iamClient := iam.New(sess)
 
+		// get all current access keys
 		currentAccessKey, err := iamClient.ListAccessKeys(&iam.ListAccessKeysInput{})
 
 		if err != nil {
 			log.Fatal("Error listing keys: ", err)
 		}
 
-		if len(currentAccessKey.AccessKeyMetadata) > 1 {
-			log.Fatal("You have more than 1 AWS Keypair - this is not standard and needs to be resolved immediately. Please contact your AWS Administrator")
+		log.Info("Number of Access Keys Found: ", len(currentAccessKey.AccessKeyMetadata))
+
+		var keys []string
+
+		// loop through all keys
+		for _, key := range currentAccessKey.AccessKeyMetadata {
+			if *key.Status != "Inactive" {
+				keys = append(keys, *key.AccessKeyId)
+			}
+			lastUsed, err := iamClient.GetAccessKeyLastUsed(&iam.GetAccessKeyLastUsedInput{AccessKeyId: key.AccessKeyId})
+			if err != nil {
+				log.Error("Error getting last used time for key: ", key.AccessKeyId)
+			}
+			log.WithFields(log.Fields{"AccessKey": *key.AccessKeyId, "LastUsed": lastUsed.AccessKeyLastUsed.LastUsedDate, "Status": *key.Status}).Info("Found Access Key")
 		}
 
-		log.Info("Rotating AWS Access Key: ", *currentAccessKey.AccessKeyMetadata[0].AccessKeyId)
-
-		lastUsed, err := iamClient.GetAccessKeyLastUsed(&iam.GetAccessKeyLastUsedInput{AccessKeyId: currentAccessKey.AccessKeyMetadata[0].AccessKeyId})
+		var changeKey string
+		if len(keys) > 1 {
+			log.Info("Found multiple active keys, prompting..")
+			prompt := prompt.Choose("Please specify a key to rotate", keys)
+			changeKey = keys[prompt]
+		} else {
+			log.Info("Only one active key found, continuing..")
+			// if the slice is less than 1, it'll definitely be the first in the array
+			changeKey = keys[0]
+		}
 
 		if err != nil {
 			log.Fatal("Error getting last used for Access Key: ", err)
@@ -93,7 +113,7 @@ your credentials file`,
 		var confirm bool
 
 		if yes == false {
-			confirm = prompt.Confirm("Would you like to rotate the above key? It was last used:  %s ", lastUsed.AccessKeyLastUsed.LastUsedDate)
+			confirm = prompt.Confirm("Would you like to change key: %s ? ", changeKey)
 		} else {
 			confirm = true
 		}
@@ -114,7 +134,7 @@ your credentials file`,
 			log.Warn("Please save these to your credentials file!")
 
 			_, err = iamClient.UpdateAccessKey(&iam.UpdateAccessKeyInput{
-				AccessKeyId: currentAccessKey.AccessKeyMetadata[0].AccessKeyId,
+				AccessKeyId: aws.String(changeKey),
 				Status:      aws.String("Inactive"),
 			})
 
@@ -122,7 +142,7 @@ your credentials file`,
 				log.Fatal("Error Deactivating Old Access Key: ", err)
 			}
 
-			log.Info("Old Access Key Deactivated: ", *currentAccessKey.AccessKeyMetadata[0].AccessKeyId)
+			log.Info("Old Access Key Deactivated: ", changeKey)
 
 		}
 
