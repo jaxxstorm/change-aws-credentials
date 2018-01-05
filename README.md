@@ -1,5 +1,7 @@
 # change-aws-credentials
 
+[![Build Status](https://travis-ci.org/jaxxstorm/change-aws-credentials.svg?branch=master)](https://travis-ci.org/jaxxstorm/change-aws-credentials)
+
 A simple tool to change your AWS credentials quickly from the commandline.
 
 Currently supports changing your password, will eventually support changing your MFA and Access/Secret Keys

@@ -10,8 +10,8 @@ builds:
 # Archive customization
 archive:
   format: tar.gz
-sign:
-   artifacts: all
+#sign:
+# artifacts: all
 brew:
   github:
     owner: jaxxstorm
@@ -25,6 +25,16 @@ brew:
   homepage: "https://leebriggs.co.uk/"
   description: "A simple tool to change your AWS credentials quickly from the commandline"
 dockers:
-  binary: change-aws-password
-  image: jaxxstorm/change-aws-password
-  latest: true
+  -
+    binary: change-aws-password
+    image: jaxxstorm/change-aws-password
+    latest: true
+fpm:
+  vendor: Lee Briggs
+  homepage: https://leebriggs.co.uk
+  maintainer: Lee Briggs <lee@leebriggs.co.uk>
+  description: "A simple tool to change your AWS credentials quickly from the commandline"
+  license: MIT
+  formats:
+    - deb
+#   - rpm
