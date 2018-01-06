@@ -25,5 +25,6 @@ script:
 
 after_success:
   - gem install --no-ri --no-rdoc fpm 
+  - apt-get install rpmbuild
   - test -n "$TRAVIS_TAG" && curl -sL https://git.io/goreleaser | bash
 
