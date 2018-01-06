@@ -37,4 +37,4 @@ fpm:
   license: MIT
   formats:
     - deb
-#   - rpm
+    - rpm
