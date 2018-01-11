@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
+// New exported AWS function
 func New(profile string) (*session.Session, error) {
 
 	// grab credentials from env vars first

@@ -34,6 +34,7 @@ import (
 var cfgFile string
 var awsProfile string
 
+// Version used for passing version string
 var Version string
 
 // RootCmd represents the base command when called without any subcommands
