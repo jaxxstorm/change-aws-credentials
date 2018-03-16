@@ -88,12 +88,15 @@ your credentials file`,
 
 		// a slice to put keys in
 		var keys []string
+		var deleteKeys []string
 
 		// loop through all keys
 		for _, key := range currentAccessKey.AccessKeyMetadata {
 			// add active keys to a slice for later
 			if *key.Status != "Inactive" {
 				keys = append(keys, *key.AccessKeyId)
+			} else {
+				deleteKeys = append(deleteKeys, *key.AccessKeyId)
 			}
 			// get last used date
 			lastUsed, err := iamClient.GetAccessKeyLastUsed(&iam.GetAccessKeyLastUsedInput{AccessKeyId: key.AccessKeyId})
@@ -101,6 +104,26 @@ your credentials file`,
 				log.Error("Error getting last used time for key: ", key.AccessKeyId)
 			}
 			log.WithFields(log.Fields{"AccessKey": *key.AccessKeyId, "LastUsed": lastUsed.AccessKeyLastUsed.LastUsedDate, "Status": *key.Status}).Info("Found Access Key")
+		}
+
+		if len(deleteKeys) > 0 {
+			log.Warn("Inactive keys have been found in your profile - do you wish to delete these keys?")
+			var confirmDelete bool
+			for _, dKey := range deleteKeys {
+				confirmDelete = prompt.Confirm("Would you like to delete Inactive key: %s ? ", dKey)
+				if confirmDelete {
+					log.Info("Deleting Key: ", dKey)
+					_, err = iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+						AccessKeyId: aws.String(dKey),
+					})
+					if err != nil {
+						log.Error("Error Deleting Inactive Access Key: ", err)
+					}
+				} else {
+					log.Info("Leaving Key in Place")
+				}
+			}
+
 		}
 
 		// determine the key to cycle
