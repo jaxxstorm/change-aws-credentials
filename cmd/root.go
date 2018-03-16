@@ -43,7 +43,7 @@ var RootCmd = &cobra.Command{
 	Short: "Change your AWS credentials quickly from the cmdline",
 	Long: `Allows users to quickly reset their AWS credentials without
 having to burden an administrator`,
-	Run: func(cmd *cobra.Command, args []string) {},
+	// Run: func(cmd *cobra.Command, args []string) {},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

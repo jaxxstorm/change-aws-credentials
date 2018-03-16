@@ -110,7 +110,11 @@ your credentials file`,
 			log.Warn("Inactive keys have been found in your profile - do you wish to delete these keys?")
 			var confirmDelete bool
 			for _, dKey := range deleteKeys {
-				confirmDelete = prompt.Confirm("Would you like to delete Inactive key: %s ? ", dKey)
+				if yes == false {
+					confirmDelete = prompt.Confirm("Would you like to delete Inactive key: %s ? ", dKey)
+				} else {
+					confirmDelete = true
+				}
 				if confirmDelete {
 					log.Info("Deleting Key: ", dKey)
 					_, err = iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
