@@ -21,15 +21,18 @@
 package cmd
 
 import (
+	"os"
+
+	// external packages
+	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	// aws
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	amazon "github.com/jaxxstorm/change-aws-credentials/pkg/aws"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 var userName string
@@ -54,7 +57,12 @@ without using your old password.`,
 		}
 
 		if awsProfile == "" {
-			log.Warning("Profile not specified, using default from credentials provider")
+			if os.Getenv("AWS_PROFILE") == "" {
+				awsProfile = "default"
+			} else {
+				awsProfile = os.Getenv("AWS_PROFILE")
+			}
+			log.Warning("Profile not specified, using default profile from credentials provider: ", awsProfile)
 		}
 
 		svc := iam.New(sess)

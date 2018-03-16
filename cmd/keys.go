@@ -21,18 +21,24 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+
+	// external packages
+	log "github.com/Sirupsen/logrus"
+	"github.com/jaxxstorm/go-prompt"
+	"github.com/knq/ini"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
+	// aws
 	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
 
-	"github.com/segmentio/go-prompt"
-
+	// private packages
 	amazon "github.com/jaxxstorm/change-aws-credentials/pkg/aws"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 var yes bool
@@ -45,11 +51,16 @@ var keysCmd = &cobra.Command{
 your credentials file`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		sess, err := amazon.New(awsProfile)
-
 		if awsProfile == "" {
-			log.Warning("Profile not specified, using default profile from credentials provider")
+			if os.Getenv("AWS_PROFILE") == "" {
+				awsProfile = "default"
+			} else {
+				awsProfile = os.Getenv("AWS_PROFILE")
+			}
+			log.Warning("Profile not specified, using default profile from credentials provider: ", awsProfile)
 		}
+
+		sess, err := amazon.New(awsProfile)
 
 		// create an STS client and figure out who we are
 		stsClient := sts.New(sess)
@@ -128,11 +139,7 @@ your credentials file`,
 				log.Fatal("Error creating new Access Key: ", err)
 			}
 
-			// print new keys
-			// FIXME: write the credentials files
 			log.Info("New Access Key: ", *createAccessKey.AccessKey.AccessKeyId)
-			log.Info("New Secret Key: ", *createAccessKey.AccessKey.SecretAccessKey)
-			log.Warn("Please save these to your credentials file!")
 
 			// deactivate the old keys
 			_, err = iamClient.UpdateAccessKey(&iam.UpdateAccessKeyInput{
@@ -145,6 +152,35 @@ your credentials file`,
 			}
 
 			log.Info("Old Access Key Deactivated: ", changeKey)
+
+			home, err := homedir.Dir()
+
+			if err != nil {
+				log.Fatal("Error retrieving home directory: ", err)
+			}
+
+			credentialsPath := fmt.Sprintf("%s/.aws/credentials", home)
+
+			data, err := ioutil.ReadFile(credentialsPath)
+
+			if err != nil {
+				log.Fatal("Error retrieving AWS credentials file: ", err)
+			}
+
+			credsFile, err := ini.LoadBytes(data)
+
+			if err != nil {
+				log.Fatal("Error loading credentials INI file: ", err)
+			}
+
+			iniProfile := credsFile.GetSection(awsProfile)
+
+			iniProfile.SetKey("aws_access_key_id", *createAccessKey.AccessKey.AccessKeyId)
+			iniProfile.SetKey("aws_secret_access_key", *createAccessKey.AccessKey.SecretAccessKey)
+
+			log.Info("Writing new Keys to Credentials file: ", credentialsPath)
+
+			credsFile.Write(credentialsPath)
 
 		}
 
