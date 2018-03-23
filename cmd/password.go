@@ -37,6 +37,7 @@ import (
 
 var userName string
 var newPass string
+var changeRequired bool
 
 // passwordCmd represents the password command
 var passwordCmd = &cobra.Command{
@@ -67,8 +68,9 @@ without using your old password.`,
 
 		svc := iam.New(sess)
 		input := &iam.UpdateLoginProfileInput{
-			Password: aws.String(newPass),
-			UserName: aws.String(userName),
+			Password:              aws.String(newPass),
+			UserName:              aws.String(userName),
+			PasswordResetRequired: aws.Bool(changeRequired),
 		}
 		_, err = svc.UpdateLoginProfile(input)
 		if err != nil {
@@ -105,5 +107,6 @@ func init() {
 
 	passwordCmd.PersistentFlags().StringVarP(&userName, "username", "u", "", "Username to change pass for")
 	passwordCmd.PersistentFlags().StringVarP(&newPass, "password", "p", "", "New AWS Password for user & profile")
+	passwordCmd.PersistentFlags().BoolVarP(&changeRequired, "change-required", "c", false, "Specify whether the user needs to reset their password on next login")
 
 }
