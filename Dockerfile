@@ -1,8 +1,11 @@
-FROM golang:1.9
+FROM golang:1.10.0-alpine3.7
 
 WORKDIR /go/src/github.com/jaxxstorm/change-aws-credentials
 
 COPY . .
+
+RUN apk update && apk upgrade && \
+    apk add --no-cache git
 
 RUN go get -v github.com/Masterminds/glide
 
