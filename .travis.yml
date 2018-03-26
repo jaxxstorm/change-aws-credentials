@@ -16,7 +16,6 @@ before_script:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y rpm
-  - gem install --no-ri --no-rdoc fpm
 
 install:
   - go get -v github.com/Masterminds/glide
