@@ -1,14 +1,17 @@
-FROM alpine
+FROM golang:1.9
 
-RUN apk add --update curl jq && \
-    rm -rf /var/cache/apk/*
+WORKDIR /go/src/github.com/jaxxstorm/change-aws-credentials
 
-# get the latest version from github API
+COPY . .
 
-RUN curl -s https://api.github.com/repos/jaxxstorm/change-aws-credentials/releases/latest | jq -r '.assets[]| select(.browser_download_url | contains("linux")) | .browser_download_url' | xargs curl -L -o /tmp/change-aws-credentials.tar.gz
+RUN go get -v github.com/Masterminds/glide
 
-RUN tar zxvf /tmp/change-aws-credentials.tar.gz
+RUN cd $GOPATH/src/github.com/Masterminds/glide && git checkout tags/v0.12.3 && go install && cd -
 
-RUN mv change-aws-credentials /usr/local/bin/change-aws-credentials
+RUN ls .
 
-ENTRYPOINT ["/usr/local/bin/change-aws-credentials"] 
+RUN glide install
+
+RUN go build -o change-aws-credentials main.go
+
+ENTRYPOINT ["./change-aws-credentials"] 

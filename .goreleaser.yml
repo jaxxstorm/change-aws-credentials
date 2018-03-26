@@ -26,8 +26,8 @@ brew:
   description: "A simple tool to change your AWS credentials quickly from the commandline"
 dockers:
   -
-    binary: change-aws-password
-    image: jaxxstorm/change-aws-password
+    binary: change-aws-credentials
+    image: jaxxstorm/change-aws-credentials
     latest: true
 fpm:
   vendor: Lee Briggs

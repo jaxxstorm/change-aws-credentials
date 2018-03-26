@@ -30,6 +30,8 @@ Download the latest release from the [releases](https://github.com/jaxxstorm/cha
 
 # Usage
 
+Assuming you have a working aws credentials file in the usual location (`$HOME/.aws`) then you can just run the command:
+
 ```bash
 Allows users to quickly reset their AWS credentials without
 having to burden an administrator
@@ -49,6 +51,14 @@ Flags:
   -h, --help                help for change-aws-credentials
 
 Use "change-aws-credentials [command] --help" for more information about a command.
+```
+
+## Docker
+
+A docker image is built with every version, just remember to mount your AWS credentials file in the docker container like so:
+
+```
+docker run -it -v $HOME:/root/ change-aws-credentials:latest keys
 ```
 
 ## Profiles
