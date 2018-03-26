@@ -24,13 +24,6 @@ brew:
     system "#{bin}/change-aws-credentials version"
   homepage: "https://leebriggs.co.uk/"
   description: "A simple tool to change your AWS credentials quickly from the commandline"
-dockers:
-  -
-    binary: change-aws-credentials
-    image: jaxxstorm/change-aws-credentials
-    tag_templates:
-    - '{{ .Tag }}'
-    - latest
 nfpm:
   vendor: Lee Briggs
   homepage: https://leebriggs.co.uk
