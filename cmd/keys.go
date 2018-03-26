@@ -46,7 +46,7 @@ var yes bool
 // keysCmd represents the keys command
 var keysCmd = &cobra.Command{
 	Use:   "keys",
-	Short: "Rotate your AWS keys",
+	Short: "Rotate your AWS Keys",
 	Long: `Rotate your AWS secret key and secret access key, and save the new keys to 
 your credentials file`,
 	Run: func(cmd *cobra.Command, args []string) {
