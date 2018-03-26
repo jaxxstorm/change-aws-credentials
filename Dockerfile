@@ -10,8 +10,4 @@ RUN cd $GOPATH/src/github.com/Masterminds/glide && git checkout tags/v0.12.3 && 
 
 RUN ls .
 
-RUN glide install
-
-RUN go build -o change-aws-credentials main.go
-
 ENTRYPOINT ["./change-aws-credentials"] 
