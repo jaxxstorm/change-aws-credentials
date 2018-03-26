@@ -28,7 +28,9 @@ dockers:
   -
     binary: change-aws-credentials
     image: jaxxstorm/change-aws-credentials
-    latest: true
+    tag_templates:
+    - '{{ .Tag }}'
+    - latest
 nfpm:
   vendor: Lee Briggs
   homepage: https://leebriggs.co.uk
