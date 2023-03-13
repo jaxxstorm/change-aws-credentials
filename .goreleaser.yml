@@ -1,35 +1,26 @@
+before:
+  hooks:
+    - go mod download
 builds:
-  - main: main.go
-    binary: change-aws-credentials
-    goos:
-      - windows
-      - darwin
-      - linux
-    goarch:
-      - amd64
-# Archive customization
-archive:
-  format: tar.gz
-#sign:
-# artifacts: all
-brew:
-  github:
-    owner: jaxxstorm
-    name: homebrew-tap
-  commit_author:
-    name: Lee Briggs
-    email: lee@leebriggs.co.uk
-  folder: Formula
-  test: |
-    system "#{bin}/change-aws-credentials version"
-  homepage: "https://leebriggs.co.uk/"
-  description: "A simple tool to change your AWS credentials quickly from the commandline"
-nfpm:
-  vendor: Lee Briggs
-  homepage: https://leebriggs.co.uk
-  maintainer: Lee Briggs <lee@leebriggs.co.uk>
-  description: "A simple tool to change your AWS credentials quickly from the commandline"
-  license: MIT
-  formats:
-    - deb
-    - rpm
+- goos:
+    - darwin
+    - windows
+    - linux
+  goarch:
+    - amd64
+    - arm64
+  ldflags: -X github.com/jaxxstorm/change-aws-credentials/pkg/version.Version={{.Version}}
+  binary: change-aws-credentials
+  main: main.go
+archives:
+- name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+  format_overrides:
+    - goos: windows
+      format: zip
+snapshot:
+  name_template: "{{ .Tag }}-SNAPSHOT"
+changelog:
+  skip: true
+release:
+  prerelease: auto
+
